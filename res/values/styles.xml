@@ -33,7 +33,7 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
-        <item name="light_dark">@color/dark</item>
+        <item name="light_dark">@color/bg_black</item>
         <item name="settings_titleText">?android:attr/textAppearanceLargeInverse</item>
         <item name="month_header_bgcolor">@color/month_other_bgcolor</item>
         <item name="agenda_general_bgcolor">@color/agenda_general_background_color</item>
@@ -44,6 +44,7 @@
         <item name="recurrence_picker_bgcolor">@color/recurrence_picker_background</item>
         <item name="done_text_recurrence">@color/recurrence_done_text_color</item>
         <item name="spinner_privacy_presence_bgcolor">@color/spinner_privacy_popupBackground</item>
+        <item name="event_info_bgcolor">@color/background_color</item>
         <item name="event_info_scrollview_bgcolor">@android:color/white</item>
         <item name="event_info_organizer_color">@color/event_info_organizer_color</item>
         <item name="event_info_description_color">@color/event_info_description_color</item>
@@ -53,8 +54,10 @@
         <item name="create_event_date_color">@color/create_event_date_color</item>
         <item name="calendar_owner_text_color">@color/calendar_owner_text_color</item>
         <item name="calendar_date_banner_bgcolor">@color/calendar_date_banner_background</item>
-        <item name="app_bar_color">@color/colorPrimary</item>
+        <item name="app_bar_color">@color/app_bar</item>
         <item name="autoCompleteTextViewStyle">@style/actionbar_cursor</item>
+        <item name="minus_button">@drawable/ic_menu_remove_field_holo_light</item>
+        <item name="ic_menu_email">@drawable/ic_menu_email_holo_light</item>
     </style>
 
     <style name="Base.CalendarAppThemeWithActionBar" parent="Theme.AppCompat.Light.DarkActionBar">
@@ -108,7 +111,7 @@
 
     <style name="MinusButton">
         <item name="android:background">?android:attr/selectableItemBackground</item>
-        <item name="android:src">@drawable/ic_menu_remove_field_holo_light</item>
+        <item name="android:src">?attr/minus_button</item>
     </style>
 
     <style name="MonthView_DayLabel">
@@ -317,13 +320,11 @@
     <style name="WidgetDayOfWeekStyle">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginBottom">-5dip</item>
+        <item name="android:layout_marginBottom">4dip</item>
         <item name="android:textSize">12sp</item>
-        <item name="android:textAllCaps">true</item>
-
         <item name="android:textStyle">bold</item>
-        <item name="android:gravity">left</item>
-        <item name="android:singleLine">true</item>
+        <item name="android:gravity">start</item>
+        <item name="android:maxLines">1</item>
     </style>
 
     <style name="WidgetDateStyle">
@@ -331,8 +332,8 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textSize">24sp</item>
         <item name="android:gravity">left</item>
-        <item name="android:layout_marginTop">-4dp</item>
-        <item name="android:singleLine">true</item>
+        <item name="android:layout_marginTop">-6dp</item>
+        <item name="android:maxLines">1</item>
     </style>
 
     <style name="NotificationPrimaryText" parent="@android:style/TextAppearance.StatusBar.EventContent.Title" />

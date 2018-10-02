@@ -574,6 +574,7 @@ public class EditEventFragment extends Fragment implements EventHandler, OnColor
             mOnDone.setDoneCode(Utils.DONE_SAVE);
             mOnDone.run();
         }
+        act.finish();
         super.onPause();
     }
 
@@ -851,7 +852,7 @@ public class EditEventFragment extends Fragment implements EventHandler, OnColor
                     if (cursor.moveToFirst()) {
                         EventColorCache cache = new EventColorCache();
                         do {
-                            int colorKey = cursor.getInt(EditEventHelper.COLORS_INDEX_COLOR_KEY);
+                            String colorKey = cursor.getString(EditEventHelper.COLORS_INDEX_COLOR_KEY);
                             int rawColor = cursor.getInt(EditEventHelper.COLORS_INDEX_COLOR);
                             int displayColor = Utils.getDisplayColorFromColor(rawColor);
                             String accountName = cursor

@@ -83,12 +83,12 @@ public class Utils {
     public static final int MODIFY_ALL = 3;
     // When the edit event view finishes it passes back the appropriate exit
     // code.
-    public static final int DONE_REVERT = 1 << 0;
+    public static final int DONE_REVERT = 1;
     public static final int DONE_SAVE = 1 << 1;
     public static final int DONE_DELETE = 1 << 2;
     // And should re run with DONE_EXIT if it should also leave the view, just
     // exiting is identical to reverting
-    public static final int DONE_EXIT = 1 << 0;
+    public static final int DONE_EXIT = 1;
     public static final String OPEN_EMAIL_MARKER = " <";
     public static final String CLOSE_EMAIL_MARKER = ">";
     public static final String INTENT_KEY_DETAIL_VIEW = "DETAIL_VIEW";
@@ -118,7 +118,6 @@ public class Utils {
     private static final float INTENSITY_ADJUST = 0.8f;
     private static final TimeZoneUtils mTZUtils = new TimeZoneUtils(SHARED_PREFS_NAME);
     private static final Pattern mWildcardPattern = Pattern.compile("^.*$");
-    public static final String THEME_PREF = "pref_theme";
 
     /**
     * A coordinate must be of the following form for Google Maps to correctly use it:
@@ -339,10 +338,6 @@ public class Utils {
     public static boolean getSharedPreference(Context context, String key, boolean defaultValue) {
         SharedPreferences prefs = GeneralPreferences.getSharedPreferences(context);
         return prefs.getBoolean(key, defaultValue);
-    }
-
-    public static String getTheme(Context context) {
-        return getSharedPreference(context, THEME_PREF, "light");
     }
 
     /**
@@ -1331,15 +1326,15 @@ public class Utils {
         String dayViewText;
         if (julianDay == todayJulianDay) {
             dayViewText = context.getString(R.string.agenda_today,
-                    mTZUtils.formatDateRange(context, millis, millis, flags).toString());
+                    mTZUtils.formatDateRange(context, millis, millis, flags));
         } else if (julianDay == todayJulianDay - 1) {
             dayViewText = context.getString(R.string.agenda_yesterday,
-                    mTZUtils.formatDateRange(context, millis, millis, flags).toString());
+                    mTZUtils.formatDateRange(context, millis, millis, flags));
         } else if (julianDay == todayJulianDay + 1) {
             dayViewText = context.getString(R.string.agenda_tomorrow,
-                    mTZUtils.formatDateRange(context, millis, millis, flags).toString());
+                    mTZUtils.formatDateRange(context, millis, millis, flags));
         } else {
-            dayViewText = mTZUtils.formatDateRange(context, millis, millis, flags).toString();
+            dayViewText = mTZUtils.formatDateRange(context, millis, millis, flags);
         }
         dayViewText = dayViewText.toUpperCase();
         return dayViewText;

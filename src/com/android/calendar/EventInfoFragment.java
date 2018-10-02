@@ -54,6 +54,9 @@ import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds;
 import android.provider.ContactsContract.Intents;
 import android.provider.ContactsContract.QuickContact;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.support.v4.content.FileProvider;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
@@ -63,7 +66,7 @@ import android.text.method.MovementMethod;
 import android.text.style.ForegroundColorSpan;
 import android.text.util.Rfc822Token;
 import android.util.Log;
-import android.util.SparseIntArray;
+import android.util.SparseArray;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -116,6 +119,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import ws.xsoh.etar.BuildConfig;
 import ws.xsoh.etar.R;
 
 import static android.provider.CalendarContract.EXTRA_EVENT_ALL_DAY;
@@ -190,7 +194,7 @@ public class EventInfoFragment extends DialogFragment implements OnCheckedChange
     private static final String PERIOD_SPACE = ". ";
     private static final String NO_EVENT_COLOR = "";
     // Query tokens for QueryHandler
-    private static final int TOKEN_QUERY_EVENT = 1 << 0;
+    private static final int TOKEN_QUERY_EVENT = 1;
     private static final int TOKEN_QUERY_CALENDARS = 1 << 1;
     private static final int TOKEN_QUERY_ATTENDEES = 1 << 2;
     private static final int TOKEN_QUERY_DUPLICATE_CALENDARS = 1 << 3;
@@ -377,7 +381,7 @@ public class EventInfoFragment extends DialogFragment implements OnCheckedChange
         }
     };
     private EventColorPickerDialog mColorPickerDialog;
-    private SparseIntArray mDisplayColorKeyMap = new SparseIntArray();
+    private SparseArray<String> mDisplayColorKeyMap = new SparseArray<String>();
     private int[] mColors;
     private int mOriginalColor = -1;
     private boolean mOriginalColorInitialized = false;
@@ -385,7 +389,7 @@ public class EventInfoFragment extends DialogFragment implements OnCheckedChange
     private boolean mCalendarColorInitialized = false;
     private int mCurrentColor = -1;
     private boolean mCurrentColorInitialized = false;
-    private int mCurrentColorKey = -1;
+    private String mCurrentColorKey = NO_EVENT_COLOR;
     private boolean mNoCrossFade = false;  // Used to prevent repeated cross-fade
     private RadioGroup mResponseRadioGroup;
     private int mDefaultReminderMinutes;
@@ -734,7 +738,7 @@ public class EventInfoFragment extends DialogFragment implements OnCheckedChange
             mCurrentColor = savedInstanceState.getInt(BUNDLE_KEY_CURRENT_COLOR);
             mCurrentColorInitialized = savedInstanceState.getBoolean(
                     BUNDLE_KEY_CURRENT_COLOR_INIT);
-            mCurrentColorKey = savedInstanceState.getInt(BUNDLE_KEY_CURRENT_COLOR_KEY);
+            mCurrentColorKey = savedInstanceState.getString(BUNDLE_KEY_CURRENT_COLOR_KEY);
 
             mTentativeUserSetResponse = savedInstanceState.getInt(
                             BUNDLE_KEY_TENTATIVE_USER_RESPONSE,
@@ -764,6 +768,15 @@ public class EventInfoFragment extends DialogFragment implements OnCheckedChange
         } else {
             mView = inflater.inflate(R.layout.event_info, container, false);
         }
+
+        Toolbar myToolbar = (Toolbar) mView.findViewById(R.id.toolbar);
+        AppCompatActivity activity = (AppCompatActivity)getActivity();
+        if (myToolbar != null && activity != null) {
+            activity.setSupportActionBar(myToolbar);
+            activity.getSupportActionBar().setDisplayShowTitleEnabled(false);
+            myToolbar.setNavigationIcon(R.drawable.ic_ab_back);
+        }
+
         mScrollView = (ScrollView) mView.findViewById(R.id.event_info_scroll_view);
         mLoadingMsgView = mView.findViewById(R.id.event_info_loading_msg);
         mTitle = (TextView) mView.findViewById(R.id.title);
@@ -1009,7 +1022,7 @@ public class EventInfoFragment extends DialogFragment implements OnCheckedChange
         outState.putBoolean(BUNDLE_KEY_ORIGINAL_COLOR_INIT, mOriginalColorInitialized);
         outState.putInt(BUNDLE_KEY_CURRENT_COLOR, mCurrentColor);
         outState.putBoolean(BUNDLE_KEY_CURRENT_COLOR_INIT, mCurrentColorInitialized);
-        outState.putInt(BUNDLE_KEY_CURRENT_COLOR_KEY, mCurrentColorKey);
+        outState.putString(BUNDLE_KEY_CURRENT_COLOR_KEY, mCurrentColorKey);
 
         // We'll need the temporary response for configuration changes.
         outState.putInt(BUNDLE_KEY_TENTATIVE_USER_RESPONSE, mTentativeUserSetResponse);
@@ -1192,9 +1205,11 @@ public class EventInfoFragment extends DialogFragment implements OnCheckedChange
             if (IcalendarUtils.writeCalendarToFile(calendar, inviteFile)) {
                 if (type == ShareType.INTENT) {
                     inviteFile.setReadable(true, false);     // Set world-readable
+                    Uri icsFile = FileProvider.getUriForFile(getContext(),
+                            BuildConfig.APPLICATION_ID + ".provider", inviteFile);
                     Intent shareIntent = new Intent();
                     shareIntent.setAction(Intent.ACTION_SEND);
-                    shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(inviteFile));
+                    shareIntent.putExtra(Intent.EXTRA_STREAM, icsFile);
                     // The ics file is sent as an extra, the receiving application decides whether
                     // to parse the file to extract calendar events or treat it as a regular file
                     shareIntent.setType("application/octet-stream");
@@ -1211,10 +1226,12 @@ public class EventInfoFragment extends DialogFragment implements OnCheckedChange
                     // For now, we are duplicating ics file and using that as the vcs file
                     // TODO: revisit above
                     if (IcalendarUtils.copyFile(inviteFile, vcsInviteFile)) {
+                        Uri vcsFile = FileProvider.getUriForFile(getContext(),
+                                BuildConfig.APPLICATION_ID + ".provider", vcsInviteFile);
                         Intent mmsShareIntent = new Intent();
                         mmsShareIntent.setAction(Intent.ACTION_SEND);
                         mmsShareIntent.setPackage("com.android.mms");
-                        mmsShareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(vcsInviteFile));
+                        mmsShareIntent.putExtra(Intent.EXTRA_STREAM, vcsFile);
                         mmsShareIntent.setType("text/x-vcalendar");
                         chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS,
                                 new Intent[]{mmsShareIntent});
@@ -2316,7 +2333,7 @@ public class EventInfoFragment extends DialogFragment implements OnCheckedChange
                     ArrayList<Integer> colors = new ArrayList<Integer>();
                     if (cursor.moveToFirst()) {
                         do {
-                            int colorKey = cursor.getInt(COLORS_INDEX_COLOR_KEY);
+                            String colorKey = cursor.getString(COLORS_INDEX_COLOR_KEY);
                             int rawColor = cursor.getInt(COLORS_INDEX_COLOR);
                             int displayColor = Utils.getDisplayColorFromColor(rawColor);
                             mDisplayColorKeyMap.put(displayColor, colorKey);

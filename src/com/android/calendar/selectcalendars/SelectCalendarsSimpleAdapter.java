@@ -37,6 +37,7 @@ import android.widget.ListAdapter;
 import android.widget.TextView;
 
 import com.android.calendar.CalendarColorPickerDialog;
+import com.android.calendar.DynamicTheme;
 import com.android.calendar.Utils;
 import com.android.calendar.selectcalendars.CalendarColorCache.OnCalendarColorsLoadedListener;
 
@@ -46,7 +47,7 @@ public class SelectCalendarsSimpleAdapter extends BaseAdapter implements ListAda
     OnCalendarColorsLoadedListener {
     private static final String TAG = "SelectCalendarsAdapter";
     private static final String COLOR_PICKER_DIALOG_TAG = "ColorPickerDialog";
-    private static final int IS_SELECTED = 1 << 0;
+    private static final int IS_SELECTED = 1;
     private static final int IS_TOP = 1 << 1;
     private static final int IS_BOTTOM = 1 << 2;
     private static final int IS_BELOW_SELECTED = 1 << 3;
@@ -85,19 +86,12 @@ public class SelectCalendarsSimpleAdapter extends BaseAdapter implements ListAda
         initData(c);
         mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mRes = context.getResources();
-        String theme = Utils.getTheme(context);
 
-        if (theme.equals("dark")) {
-            mColorCalendarVisible = mRes.getColor(R.color.calendar_visible_dark);
-            mColorCalendarHidden = mRes.getColor(R.color.calendar_hidden_dark);
-            mColorCalendarSecondaryVisible = mRes.getColor(R.color.calendar_secondary_visible_dark);
-            mColorCalendarSecondaryHidden = mRes.getColor(R.color.calendar_secondary_hidden_dark);
-        } else {
-            mColorCalendarVisible = mRes.getColor(R.color.calendar_visible);
-            mColorCalendarHidden = mRes.getColor(R.color.calendar_hidden);
-            mColorCalendarSecondaryVisible = mRes.getColor(R.color.calendar_secondary_visible);
-            mColorCalendarSecondaryHidden = mRes.getColor(R.color.calendar_secondary_hidden);
-        }
+        DynamicTheme theme = new DynamicTheme();
+        mColorCalendarVisible = theme.getColor(context, "calendar_visible");
+        mColorCalendarHidden = theme.getColor(context, "calendar_hidden");
+        mColorCalendarSecondaryVisible = theme.getColor(context, "calendar_secondary_visible");
+        mColorCalendarSecondaryHidden = theme.getColor(context, "calendar_secondary_hidden");
 
         if (mScale == 0) {
             mScale = mRes.getDisplayMetrics().density;

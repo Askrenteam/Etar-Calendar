@@ -79,7 +79,6 @@ import com.android.calendar.CalendarController.EventHandler;
 import com.android.calendar.CalendarController.EventInfo;
 import com.android.calendar.CalendarController.EventType;
 import com.android.calendar.CalendarController.ViewType;
-import com.android.calendar.DynamicTheme;
 import com.android.calendar.agenda.AgendaFragment;
 import com.android.calendar.month.MonthByWeekFragment;
 import com.android.calendar.selectcalendars.SelectVisibleCalendarsFragment;
@@ -395,23 +394,21 @@ public class AllInOneActivity extends AbstractCalendarActivity implements EventH
 
     private void checkAppPermissions() {
         // Here, thisActivity is the current activity
-        if (Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission(this,
+        if (Build.VERSION.SDK_INT >= 23 && (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.WRITE_CALENDAR)
-                != PackageManager.PERMISSION_GRANTED) {
+                != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this,
+                Manifest.permission.READ_CALENDAR)
+                != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED)) {
 
             // No explanation needed, we can request the permission.
 
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.WRITE_CALENDAR},
+                    new String[]{Manifest.permission.WRITE_CALENDAR, Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     PERMISSIONS_REQUEST_WRITE_CALENDAR);
-
-
-        }
-
-        if (Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission(this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                PERMISSIONS_REQUEST_WRITE_CALENDAR);
         }
     }
 
@@ -428,7 +425,6 @@ public class AllInOneActivity extends AbstractCalendarActivity implements EventH
 
                 } else {
                     Toast.makeText(getApplicationContext(), R.string.user_rejected_calendar_write_permission, Toast.LENGTH_LONG).show();
-                    this.finish();
                 }
                 return;
             }
@@ -578,8 +574,16 @@ public class AllInOneActivity extends AbstractCalendarActivity implements EventH
         // the list of event handlers in it's handle method. This affects who
         // the rest of the handlers the controller dispatches to are.
         mController.registerFirstEventHandler(HANDLER_KEY, this);
-
         mOnSaveInstanceStateCalled = false;
+
+        if (Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission(this,
+                Manifest.permission.READ_CALENDAR)
+                != PackageManager.PERMISSION_GRANTED) {
+            //If permission is not granted then just return.
+            Log.d(TAG, "Manifest.permission.READ_CALENDAR is not granted");
+            return;
+        }
+
         mContentResolver.registerContentObserver(CalendarContract.Events.CONTENT_URI,
                 true, mObserver);
         if (mUpdateOnResume) {
@@ -626,6 +630,14 @@ public class AllInOneActivity extends AbstractCalendarActivity implements EventH
         mController.deregisterEventHandler(HANDLER_KEY);
         mPaused = true;
         mHomeTime.removeCallbacks(mHomeTimeUpdater);
+
+        if (Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission(this,
+                Manifest.permission.READ_CALENDAR)
+                != PackageManager.PERMISSION_GRANTED) {
+            //If permission is not granted then just return.
+            Log.d(TAG, "Manifest.permission.WRITE_CALENDAR is not granted");
+            return;
+        }
 
         mContentResolver.unregisterContentObserver(mObserver);
         if (isFinishing()) {
@@ -972,7 +984,7 @@ public class AllInOneActivity extends AbstractCalendarActivity implements EventH
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-        if (key.equals(GeneralPreferences.KEY_WEEK_START_DAY)) {
+        if (key.equals(GeneralPreferences.KEY_WEEK_START_DAY) || key.equals(GeneralPreferences.KEY_DAYS_PER_WEEK)) {
             if (mPaused) {
                 mUpdateOnResume = true;
             } else {
@@ -1469,10 +1481,8 @@ public class AllInOneActivity extends AbstractCalendarActivity implements EventH
                                             GeneralPreferences.KEY_SKIP_SETUP, true);
                                 }
 
-                            } catch (OperationCanceledException ignore) {
+                            } catch (OperationCanceledException | IOException | AuthenticatorException ignore) {
                                 // The account creation process was canceled
-                            } catch (IOException ignore) {
-                            } catch (AuthenticatorException ignore) {
                             }
                         }
                     }, null);
